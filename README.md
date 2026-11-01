@@ -131,12 +131,18 @@ nothing is looked up, and the "server" is a text message.
 ## Sound
 
 Small synthesised chimes — no audio files, nothing to download, works offline.
-A correct answer plays a note that **climbs as your streak grows**; a miss is a
-soft low thud, never a buzzer; a chapter completion gets a slow arpeggio, and a
-duel win gets a short flourish.
 
-The speaker in the top bar mutes everything. Settings has a volume slider with a
-live preview. Both are saved with the rest of the state.
+| Group | What you hear |
+| --- | --- |
+| Interface | a tick on tab change, a rising pair when a card opens, a rustle on a page turn, a pluck when a plant is tapped (pitched by how grown it is) |
+| Answers | a chime that **climbs with each correct answer in a row**, a soft low thud for a miss, a two-note *kept* when the daily word is marked |
+| Celebrations | a four-note arpeggio for a finished chapter, a five-note flourish for a duel win, a gentler descent for a loss, a bigger flourish for a new Endless record |
+
+Settings holds a master volume slider (live preview), an on/off switch for each
+group, and a test button. The speaker in the top bar mutes everything instantly.
+
+Sound unlocks on the first touch — iOS will not play audio before a gesture — and
+the phone's silent switch always wins.
 
 ## The words
 
@@ -184,5 +190,6 @@ leave the phone, and only when you choose.
   touches saved progress.
 - `&view=review|play|garden|words`, `&sheet=mitigate`, `&theme=light|dark` for
   screenshots; `&duel=pass|draft|endless|result` (demo only) jumps into a game state.
-- Bump `CACHE` in `sw.js` when the app changes, or installed copies keep the old one.
+- `sw.js` is **network-first for the page** and cache-first for assets, so a new
+  version lands on the next load. Bump `CACHE` when the assets themselves change.
 - The research behind the design decisions is in [RESEARCH.md](RESEARCH.md).

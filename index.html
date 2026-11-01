@@ -68,6 +68,10 @@ h1,h2,h3,p,blockquote{margin:0}
 .vol input[type=range]{-webkit-appearance:none;appearance:none;width:92px;height:4px;border-radius:2px;background:var(--line);outline:none}
 .vol input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--accent);border:0;box-shadow:var(--shadow-sm)}
 .vol input[type=range]::-moz-range-thumb{width:16px;height:16px;border:0;border-radius:50%;background:var(--accent)}
+.sw{width:46px;height:28px;border-radius:999px;background:var(--line);position:relative;border:0;padding:0;flex:0 0 auto;transition:background .2s}
+.sw i{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--paper-2);box-shadow:var(--shadow-sm);transition:transform .2s}
+.sw.on{background:var(--accent)}
+.sw.on i{transform:translateX(18px)}
 .iconbtn:hover{background:var(--paper-3)}
 .iconbtn svg{width:21px;height:21px}
 
@@ -592,9 +596,39 @@ function noiseBurst(dur, gain){
   src.connect(f); f.connect(g); g.connect(master); src.start();
 }
 
+function sfxOn(cat){ return S.settings.sound && S.settings.cats[cat] !== false; }
+
 /* soft, warm, and short. No buzzers. */
 const SFX = {
+  /* ---- interface ---- */
+  tap(){ if (!sfxOn('ui')) return; tone(784, { dur: 0.06, gain: 0.045, type: 'triangle' }); },
+  open(){
+    if (!sfxOn('ui')) return;
+    tone(587.33, { dur: 0.14, gain: 0.055, type: 'triangle' });
+    tone(880, { dur: 0.16, gain: 0.032, delay: 0.05 });
+  },
+  close(){ if (!sfxOn('ui')) return; tone(523.25, { dur: 0.16, gain: 0.05, type: 'triangle', to: 392 }); },
+  page(){ if (!sfxOn('ui')) return; noiseBurst(0.16, 0.028); },
+  pass(){
+    if (!sfxOn('ui')) return;
+    tone(659.25, { dur: 0.18, gain: 0.06 });
+    tone(493.88, { dur: 0.24, gain: 0.05, delay: 0.12 });
+  },
+  round(){
+    if (!sfxOn('ui')) return;
+    tone(587.33, { dur: 0.12, gain: 0.05 });
+    tone(783.99, { dur: 0.14, gain: 0.05, delay: 0.1 });
+  },
+  pluck(stage){
+    if (!sfxOn('ui')) return;
+    const f = [392, 523.25, 659.25, 783.99, 987.77][Math.min(stage || 0, 4)];
+    tone(f, { dur: 0.26, gain: 0.075, type: 'triangle' });
+    tone(f * 2, { dur: 0.12, gain: 0.018, delay: 0.01 });
+  },
+
+  /* ---- answers ---- */
   right(combo){
+    if (!sfxOn('answer')) return;
     const scale = [523.25, 587.33, 659.25, 783.99, 880, 1046.5];
     const f = scale[Math.min(Math.max(combo || 1, 1) - 1, scale.length - 1)];
     tone(f, { dur: 0.36, gain: 0.15 });
@@ -602,25 +636,55 @@ const SFX = {
     tone(f * 2, { dur: 0.22, gain: 0.035, delay: 0.02 });
   },
   wrong(){
+    if (!sfxOn('answer')) return;
     tone(196, { dur: 0.34, gain: 0.1, to: 150 });
     tone(294, { dur: 0.2, gain: 0.03, to: 220 });
   },
   keep(){
+    if (!sfxOn('answer')) return;
     tone(523.25, { dur: 0.5, gain: 0.12 });
     tone(783.99, { dur: 0.55, gain: 0.085, delay: 0.09 });
   },
-  note(){ tone(392, { dur: 0.2, gain: 0.075, type: 'triangle' }); },
-  page(){ noiseBurst(0.16, 0.028); },
-  flourish(){ [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => tone(f, { dur: 0.6, gain: 0.095, delay: i * 0.1 })); },
-  win(){ [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((f, i) => tone(f, { dur: 0.55, gain: 0.095, delay: i * 0.085 })); },
-  lose(){ [440, 392, 329.63].forEach((f, i) => tone(f, { dur: 0.45, gain: 0.07, delay: i * 0.11 })); }
+  note(){ if (!sfxOn('answer')) return; tone(392, { dur: 0.2, gain: 0.075, type: 'triangle' }); },
+
+  /* ---- celebrations ---- */
+  flourish(){
+    if (!sfxOn('reward')) return;
+    [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => tone(f, { dur: 0.6, gain: 0.095, delay: i * 0.1 }));
+  },
+  win(){
+    if (!sfxOn('reward')) return;
+    [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((f, i) => tone(f, { dur: 0.55, gain: 0.095, delay: i * 0.085 }));
+  },
+  lose(){
+    if (!sfxOn('reward')) return;
+    [440, 392, 329.63].forEach((f, i) => tone(f, { dur: 0.45, gain: 0.07, delay: i * 0.11 }));
+  }
 };
+
+/* iOS will not produce a sound until the audio context has been unlocked
+   inside a real gesture, so do that on the first touch of anything. */
+function unlockAudio(){
+  const ctx = audio();
+  if (!ctx) return;
+  try {
+    if (AC.state === 'suspended') AC.resume();
+    const b = AC.createBuffer(1, 1, 22050);
+    const s = AC.createBufferSource();
+    s.buffer = b; s.connect(AC.destination); s.start(0);
+  } catch (e) {}
+}
+document.addEventListener('pointerdown', unlockAudio, { once: true });
 
 /* ---------------- state ---------------- */
 const fresh = () => ({
   v: 1, created: todayISO(), seed: (Math.random() * 1e9) | 0, builds: 0,
   words: {}, days: [], best: 0, today: null, queue: null, ptr: 0, celebrated: 0,
-  settings: { theme: 'auto', size: 'md', mix: 'balanced', sound: true, soundVol: 0.6 },
+  settings: {
+    theme: 'auto', size: 'md', mix: 'balanced',
+    sound: true, soundVol: 0.6,
+    cats: { ui: true, answer: true, reward: true }
+  },
   profile: { name: '', rival: '', cue: '', onboarded: false },
   duel: { w: 0, l: 0, t: 0, last: null }
 });
@@ -636,7 +700,11 @@ function load(){
     const base = fresh();
     return {
       ...base, ...p,
-      settings: { ...base.settings, ...(p.settings || {}) },
+      settings: {
+        ...base.settings,
+        ...(p.settings || {}),
+        cats: { ...base.settings.cats, ...((p.settings || {}).cats || {}) }
+      },
       profile:  { ...base.profile,  ...(p.profile  || {}) },
       duel:     { ...base.duel,     ...(p.duel     || {}) }
     };
@@ -1504,10 +1572,13 @@ function openSheet(html){
   sh.innerHTML = `<div class="grab"></div>` + html;
   sh.hidden = false; $('#scrim').hidden = false;
   document.body.style.overflow = 'hidden';
+  SFX.open();
 }
 function closeSheet(){
+  const wasOpen = !$('#sheet').hidden;
   $('#sheet').hidden = true; $('#scrim').hidden = true;
   document.body.style.overflow = '';
+  if (wasOpen) SFX.close();
 }
 
 function wordSheet(w){
@@ -1554,14 +1625,19 @@ function settingsSheet(){
   const days = S.days.length;
   const info = streakInfo();
   const seg = (k, opts) => `<div class="seg">${opts.map(([v, l]) => `<button class="${S.settings[k] === v ? 'on' : ''}" data-act="set" data-k="${k}" data-v="${v}">${l}</button>`).join('')}</div>`;
+  const sw = (k) => `<button class="sw ${S.settings.cats[k] !== false ? 'on' : ''}" data-act="cat" data-k="${k}" aria-label="${k} sounds" role="switch" aria-checked="${S.settings.cats[k] !== false}"><i></i></button>`;
   return `<h3>Settings</h3>
     <div class="srow"><div><div class="lbl">Name</div><div class="sub">${esc(S.profile.name || 'Not set')}${S.profile.rival ? ' · playing with ' + esc(S.profile.rival) : ''}</div></div><button class="btn btn-quiet" data-act="editprofile" style="min-height:40px;padding:0 14px;font-size:.82rem">Edit</button></div>
-    <div class="srow"><div><div class="lbl">Sound</div><div class="sub">Soft chimes, no buzzers</div></div>
+    <div class="srow"><div><div class="lbl">Sound</div><div class="sub">${S.settings.sound ? 'On · soft chimes, no buzzers' : 'Muted'}</div></div>
       <div class="vol">
         <input id="vol" type="range" min="0" max="100" value="${Math.round((S.settings.soundVol == null ? 0.6 : S.settings.soundVol) * 100)}" aria-label="Volume">
         <button class="iconbtn" data-act="mute" aria-label="Toggle sound" style="width:34px;height:34px">${S.settings.sound ? ICON_SOUND : ICON_MUTE}</button>
       </div>
     </div>
+    <div class="srow"><div><div class="lbl">Interface sounds</div><div class="sub">Taps, sheets, plants</div></div>${sw('ui')}</div>
+    <div class="srow"><div><div class="lbl">Answer sounds</div><div class="sub">Right, wrong, kept</div></div>${sw('answer')}</div>
+    <div class="srow"><div><div class="lbl">Celebrations</div><div class="sub">Chapters, duels, records</div></div>${sw('reward')}</div>
+    <div class="srow"><div><div class="lbl">Hear it</div><div class="sub">Play a short sample</div></div><button class="btn btn-quiet" data-act="soundtest" style="min-height:38px;padding:0 16px;font-size:.8rem">Test</button></div>
     <div class="srow"><div><div class="lbl">Appearance</div><div class="sub">Follows your phone unless you choose</div></div>${seg('theme', [['auto','Auto'],['light','Light'],['dark','Dark']])}</div>
     <div class="srow"><div><div class="lbl">Text size</div></div>${seg('size', [['md','Default'],['lg','Large'],['xl','Largest']])}</div>
     <div class="srow"><div><div class="lbl">Daily word mix</div><div class="sub">Useful words per stretch word</div></div>${seg('mix', [['useful','3:1'],['balanced','2:1'],['stretch','1:1']])}</div>
@@ -1665,7 +1741,7 @@ function answerTyped(text, revealOnly){
 /* ---------------- events ---------------- */
 document.addEventListener('click', (e) => {
   const tab = e.target.closest('[data-view]');
-  if (tab){ setView(tab.dataset.view); return; }
+  if (tab){ if (tab.dataset.view !== ui.view) SFX.tap(); setView(tab.dataset.view); return; }
   const el = e.target.closest('[data-act]');
   if (!el) return;
   const act = el.dataset.act;
@@ -1711,10 +1787,20 @@ document.addEventListener('click', (e) => {
   if (act === 'opt'){ answerQuiz(Number(el.dataset.i)); return; }
   if (act === 'typesubmit'){ const inp = $('#typeinput'); answerTyped(inp ? inp.value : '', false); return; }
   if (act === 'typeshow'){ answerTyped('', true); return; }
-  if (act === 'nextq'){ ui.ri++; ui.quiz = null; render(); window.scrollTo(0,0); return; }
+  if (act === 'nextq'){
+    const perfect = ui.ri + 1 >= ui.rq.length && ui.rq.every((id, i) => ui.answers[i] && ui.answers[i].ok);
+    ui.ri++; ui.quiz = null;
+    if (perfect) SFX.win();
+    render(); window.scrollTo(0,0); return;
+  }
 
   /* words / sheet */
-  if (act === 'open'){ const w = BY_ID.get(el.dataset.w); if (w) openSheet(wordSheet(w)); return; }
+  if (act === 'open'){
+    const w = BY_ID.get(el.dataset.w);
+    if (el.classList.contains('plot') && w) SFX.pluck(cls(w.w).l);
+    if (w) openSheet(wordSheet(w));
+    return;
+  }
   if (act === 'close'){ closeSheet(); return; }
   if (act === 'sstart'){ const id = el.dataset.w; st(id).due = todayISO(); st(id).n = Math.max(1, st(id).n); save(); closeSheet(); toast('Added to your reviews'); render(); return; }
   if (act === 'sknew' || act === 'snotyet'){
@@ -1767,13 +1853,13 @@ document.addEventListener('click', (e) => {
     if (d.mode === 'endless' && d.lives <= 0){ d.stage = 'result'; finishDuel(); render(); window.scrollTo(0,0); return; }
     d.idx++; d.quiz = null;
     if (d.idx >= d.words.length){
-      if (d.mode === 'endless'){ d.round++; d.words = duelWords(); d.idx = 0; }
+      if (d.mode === 'endless'){ d.round++; d.words = duelWords(); d.idx = 0; SFX.round(); }
       else if (d.mode === 'pass' && d.turn === 1){ d.stage = 'handoff'; d.idx = 0; }
       else { d.stage = 'result'; finishDuel(); }
     }
     render(); window.scrollTo(0,0); return;
   }
-  if (act === 'duel-handoff'){ const d = ui.duel; d.turn = 2; d.stage = 'play'; d.idx = 0; d.quiz = null; render(); window.scrollTo(0,0); return; }
+  if (act === 'duel-handoff'){ const d = ui.duel; d.turn = 2; d.stage = 'play'; d.idx = 0; d.quiz = null; SFX.pass(); render(); window.scrollTo(0,0); return; }
   if (act === 'duel-again'){
     const d = ui.duel;
     const mode = d.mode === 'challenge' ? 'draft' : d.mode;
@@ -1804,6 +1890,26 @@ document.addEventListener('click', (e) => {
 
   /* settings */
   if (act === 'settings'){ openSheet(settingsSheet()); return; }
+  if (act === 'cat'){
+    const k = el.dataset.k;
+    const on = !(S.settings.cats[k] !== false);
+    S.settings.cats[k] = on;
+    save();
+    openSheet(settingsSheet());
+    if (on){ if (k === 'answer') SFX.keep(); else if (k === 'reward') SFX.flourish(); else SFX.tap(); }
+    return;
+  }
+  if (act === 'soundtest'){
+    const prev = { ...S.settings.cats };
+    S.settings.cats = { ui: true, answer: true, reward: true };
+    S.settings.sound = true;
+    renderMuteBtn();
+    SFX.open();
+    setTimeout(() => SFX.right(2), 240);
+    setTimeout(() => SFX.flourish(), 620);
+    setTimeout(() => { S.settings.cats = prev; }, 1800);
+    return;
+  }
   if (act === 'set'){
     const k = el.dataset.k, v = el.dataset.v;
     S.settings[k] = v; save();
