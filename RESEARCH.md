@@ -202,6 +202,8 @@ Everything above is now in the app. Each decision traces back to a section:
 | Specific praise in the summary ("three were old friends") | Positive feedback raises intrinsic motivation; generic praise and badges do not. | 2 |
 | Onboarding: name, rival, cue, mix | Cue = implementation intention; mix + name = autonomy (g = .64). | 1, 6 |
 | Per-word "too easy / too hard" | Challenge has to track skill; challenge drove both engagement and learning. | 6 |
+| Weak words return sooner (lapses weight the queue) | Desirable difficulty: effortful retrieval is where the gain is, so the words that cost the most should come back first. | 5, 6 |
+| Soft synthesised chimes, no coins | Immediate, non-material feedback; tangible rewards are the thing that backfires. | 2 |
 | No coins, no leaderboards, no guilt notifications | Motivational drift is the documented failure mode. | 2, 3 |
 
 Still open: more words (the bank is 143; chapter 5 runs out), and a shared season
