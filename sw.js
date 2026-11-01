@@ -1,5 +1,5 @@
 /* Wordloom offline cache. Bump CACHE when the app changes. */
-const CACHE = 'wordloom-v3';
+const CACHE = 'wordloom-v4';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon.svg', './icon-180.png', './icon-512.png'];
 
 self.addEventListener('install', (e) => {

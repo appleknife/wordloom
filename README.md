@@ -88,6 +88,24 @@ down one, so a shaky word comes back sooner. The gaps are 1, 2, 4, 8, 16, 32 and
 In a word's card you can also say **Too easy** (retire it further out) or **Too
 hard** (bring it back tomorrow). That is how the app learns what he already knows.
 
+### Weak words come back sooner
+
+Every miss is a lapse, and lapses change the schedule rather than just the level:
+
+- **Three or more lapses** drops the word two levels, makes it due immediately,
+  and marks it so it sorts to the front of the queue.
+- The review queue is ordered by **need**, not calendar order: days overdue ×2,
+  lapses ×5, and how low the level is ×2. A word you keep failing beats a word
+  that is merely due.
+- If fewer than five words are due, **weak words are pulled forward** even when
+  their interval hasn't elapsed, so a struggle never waits a week for attention.
+- A missed word is **re-inserted into the same session**, three questions later.
+- Duels and Endless use the same weighting, so the words he is worst at are the
+  ones most likely to be dealt.
+
+The word card shows the record — *"Met 4 times · missed twice"* — so the extra
+attention never feels arbitrary.
+
 ## Two rest days a week
 
 The streak is deliberately forgiving. You get **two rest days per week**, spent
@@ -109,6 +127,16 @@ index.html#d=eyJ2IjoxLCJmIjoiU2FtIiwidyI6WyJ0YWNpdCIs...
 That payload holds the sender's name, the five word ids, and their score. Any phone
 that opens it gets the same five words and the same target. Nothing is uploaded,
 nothing is looked up, and the "server" is a text message.
+
+## Sound
+
+Small synthesised chimes — no audio files, nothing to download, works offline.
+A correct answer plays a note that **climbs as your streak grows**; a miss is a
+soft low thud, never a buzzer; a chapter completion gets a slow arpeggio, and a
+duel win gets a short flourish.
+
+The speaker in the top bar mutes everything. Settings has a volume slider with a
+live preview. Both are saved with the rest of the state.
 
 ## The words
 
