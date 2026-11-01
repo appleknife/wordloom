@@ -4,6 +4,9 @@
 vocabulary app for adults: a daily word, spaced review, a garden that grows, and
 a five-word duel you can play across the table or across the country.
 
+**Live:** <https://appleknife.github.io/wordloom/> — installable, works offline, and
+duel links open on any phone.
+
 <img src="preview.png" alt="Wordloom on a phone: the word of the day with its plain meaning, example sentence and root" width="300"> <img src="preview-play.png" alt="The Play tab: head-to-head tally and two ways to duel" width="300">
 
 One file of HTML, CSS and JavaScript. No build step, no dependencies, no accounts,
@@ -23,10 +26,9 @@ For the installable version — home-screen icon, opens offline — serve the fo
 then open <http://localhost:8777/wordloom/> and use **Add to Home Screen** on a
 phone, or the install icon in Chrome/Edge.
 
-> **For duels between two phones, host it.** A `file://` link only works on the
-> machine it lives on. Publish the folder (GitHub Pages works and is free — the
-> same setup as Daybreak and Scale Studio) and both phones use the same `https://`
-> address. Pass-and-play needs no hosting at all.
+> **Two phones need a URL, not a file.** A `file://` link only opens on the machine
+> it lives on, so the challenge links need the published address above. Pass-and-play
+> works anywhere, with no network at all.
 
 ## What's in it
 
